@@ -73,7 +73,7 @@ function pathFinding(start, end) {
   }
   routesNr++;
 
-  // gridMap = creategridMap(parcels, cellSize);
+  gridMap = creategridMap(parcels, cellSize);
   const influencedParcels = findInfluencedParcels(route, gridMap, D, cellSize);
 
   for (let parcel of influencedParcels){

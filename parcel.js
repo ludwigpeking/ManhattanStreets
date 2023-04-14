@@ -1,21 +1,20 @@
 class Parcel {
-  constructor(avenue, street, south, number) {
+  constructor(i, j) {
     //as in manhattan, TODO: aves east to west, streets south to north,
     //south is boolean, false is north,
     //number from east to west, starts from 1
     this.tiles = [];
     this.frontageTiles = [];
     this.accessPoint = null;
-    this.i =
-      avenue * streetWidth +
-      (avenue - 1) * blockParcelCount * parcelWidth +
-      (number - 1) * parcelWidth;
-    this.j =
-      street * streetWidth +
-      (street - 1) * 2 * parcelDepth +
-      south * parcelDepth;
+    this.i = i
+    this.j = j
     this.color = color(random(100, 255), random(200, 255), random(200, 255));
 
+    
+    this.prosperity = 1;
+  }
+  
+  originalClaim(){
     for (let i = 0; i < parcelWidth; i++) {
       for (let j = 0; j < parcelDepth; j++) {
         this.tiles.push(grid[this.i + i][this.j + j]);
@@ -24,9 +23,8 @@ class Parcel {
         grid[this.i + i][this.j + j].wall = true;
       }
     }
-    this.prosperity = 1;
   }
-  
+
   checkCenter() {
     let sumI = 0;
     let sumJ = 0;
@@ -60,6 +58,31 @@ class Parcel {
     noStroke();
     rect(this.accessPoint.i * res, this.accessPoint.j * res, res, res);
   }
+//a parcel claims a vacant tile adjacent to the parcel and of low traffic value smaller than 2. put the tile into the parcel's tiles array, and change the tile's owner to the parcel. draw the tile with the parcel's color. recalculates the parcel's center and access point.
+  claimOneTile() {
+    let vacantTiles = [];
+    for (let tile of this.tiles) {
+      for (let neighbor of tile.neighbors) {
+        if (neighbor.owner == openSpace && neighbor.traffic < 2) {
+          vacantTiles.push(neighbor);
+        }
+      }
+    }
+    if(!vacantTiles.length ==0){
+      let randomTile = vacantTiles[Math.floor(random(vacantTiles.length))];
+      randomTile.owner = this;
+      randomTile.wall = true;
+      this.tiles.push(randomTile);
+
+      for (let tile of this.tiles){
+        checkNeighbors(tile);
+        tile.show();
+      }
+      this.checkCenter();
+      this.checkAccessPoint();
+    }
+}
+  
 }
 
 function layParcels() {
@@ -67,14 +90,35 @@ function layParcels() {
     for (let j = 1; j < streetCount; j++) {
       for (let n = 0; n < 2; n++) {
         for (let k = 1; k <= blockParcelCount; k++) {
-          let parcel = new Parcel(i, j, n, k);
+          let parcel = new Parcel( i * streetWidth + 
+            (i - 1) * blockParcelCount * parcelWidth +
+            (k - 1) * parcelWidth,
+            j * streetWidth +
+            (j - 1) * 2 * parcelDepth +
+            n * parcelDepth)
+            
+            
 
           parcels.push(parcel);
+          parcel.originalClaim();
         }
       }
     }
   }
 }
 
+//extend class parcel that is not created by the args,but by (i, j), also do not add the 2D array of tiles to its tiles property. only add tiles[i][j]
+
+class SpawnedParcel extends Parcel {
+  constructor(i, j) {
+    super();
+    this.i = i;
+    this.j = j;
+    this.tiles = [];
+    this.tiles.push(grid[i][j]);
+    grid[i][j].owner = this;
+    grid[i][j].wall = true;
+  }
+}
 
 
